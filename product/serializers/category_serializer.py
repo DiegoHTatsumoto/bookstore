@@ -6,5 +6,7 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = [
             "title",
+            "slug",
+            "description",
             "active",
         ]
