@@ -4,6 +4,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 from rest_framework.views import status
 
+from order.factories import UserFactory
 from product.factories import CategoryFactory
 from product.models import Category
 
@@ -12,6 +13,8 @@ class CategoryViewSet(APITestCase):
     client = APIClient()
 
     def setUp(self):
+        self.user = UserFactory()
+        self.client.force_authenticate(user=self.user)
         self.category = CategoryFactory(title="books")
 
     def test_get_all_category(self):
