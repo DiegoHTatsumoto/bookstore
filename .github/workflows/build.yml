@@ -11,6 +11,22 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Adicionando o serviço de banco de dados para os testes
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: bookstore_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v4
 
@@ -25,13 +41,16 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install --upgrade poetry
 
-    - name: View poetry --help
-      run: poetry --help
-
     - name: Install dependencies
       shell: bash
       run: python -m poetry install
 
     - name: Test
+      env:
+        DJANGO_ALLOWED_HOSTS: "localhost 127.0.0.1"
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/bookstore_db
+        DJANGO_SETTINGS_MODULE: bookstore.settings
+        SECRET_KEY: "chave-temporaria-para-testes"
+        DEBUG: "True"
       run: |
         poetry run python manage.py test
