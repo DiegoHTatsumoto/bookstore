@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,8 +26,7 @@ SECRET_KEY = "django-insecure-uyhef6n1&5sb=3-03&l@^5ny4&hcb2z5v9!!qce37(btku=r^1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost 127.0.0.1").split(" ")
 
 # Application definition
 
@@ -37,16 +37,38 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "django_extensions",
+    "product",
+    "order",
+    "debug_toolbar",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 5,
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "bookstore.urls"
@@ -68,14 +90,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "bookstore.wsgi.application"
 
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("SQL_DATABASE", BASE_DIR / "db.sqlite3"),
+        "USER": os.environ.get("SQL_USER", "user"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "HOST": os.environ.get("SQL_HOST", "localhost"),
+        "PORT": os.environ.get("SQL_PORT", "5432"),
     }
 }
 
@@ -115,3 +144,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+DEBUG = os.environ.get("DEBUG", "0").lower() in ("true", "1", "yes")
+
+# 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
+# For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'bookstore-p37m.onrender.com']
